@@ -1,6 +1,6 @@
 from pathlib import Path
 import argparse
-import csv
+import csv #Enhancement 1: Importing csv module
 
 def scan_txt_files(directory):
     directory = Path(directory)
@@ -17,13 +17,14 @@ def scan_txt_files(directory):
     print("-" * 52)
 
     total_size = 0
-    results = []
+    results = [] #Enhancement 1: List to store results
+
     for file in txt_files:
         size_kb = file.stat().st_size / 1024
         total_size += size_kb
         rel_path = str(file.relative_to(directory))
         print(f"{rel_path:<40} {size_kb:>10.1f}")
-        results.append((rel_path, f"{size_kb:.1f}"))
+        results.append((rel_path, f"{size_kb:.1f}")) #Enhancement 1: Append results to list
 
     print("-" * 52)
     print(f"Total size: {total_size:.1f} KB\n")
