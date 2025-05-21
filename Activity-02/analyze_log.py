@@ -43,6 +43,10 @@ FINGERPRINT_PATTERN = re.compile(
     r"SSH client hassh fingerprint: (?P<fp>[0-9a-f:]{32})"
 )
 
+WGET_PATTERN = re.compile(
+    r"\[HoneyPotSSHSession.*?runCommand\] CMD: wget (?P<url>http[s]?://[^\s]+)"
+) # Extra credit
+
 # ── Helper to print tables ──────────────────────────────────────────────────
 
 def _print_counter(counter: Counter, head1: str, head2: str, sort_keys=False):
@@ -150,6 +154,21 @@ def identify_bots(path: str, min_ips: int):
     for fp, ips in sorted(bots.items(), key=lambda x: len(x[1]), reverse=True):
         print(f"{fp:<47} {len(ips):>6}")
 
+# ── Extra credit (wget drops) already implemented ───────────────────────────
+
+def analyze_wget_drops(path: str):
+    url_counter = Counter()
+
+    with open(path, encoding="utf-8") as fp:
+        for line in fp:
+            match = WGET_PATTERN.search(line)
+            if match:
+                url = match.group("url")
+                url_counter[url] += 1
+
+    print("Common wget downloads by bots")
+    _print_counter(url_counter, "URL", "Count")
+
 # ── CLI ─────────────────────────────────────────────────────────────────────
 
 def main():
@@ -174,6 +193,8 @@ def main():
         analyze_successful_creds(args.logfile)
     elif args.task == "identify-bots":
         identify_bots(args.logfile, args.min_ips)
+    elif args.task == "wget-drops":  # 🎣 Extra credit
+        analyze_wget_drops(args.logfile)
 
 
 if __name__ == "__main__":
