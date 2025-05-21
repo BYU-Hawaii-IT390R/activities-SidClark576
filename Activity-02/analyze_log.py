@@ -43,8 +43,12 @@ FINGERPRINT_PATTERN = re.compile(
     r"SSH client hassh fingerprint: (?P<fp>[0-9a-f:]{32})"
 )
 
-WGET_PATTERN = re.compile(
-    r"\[HoneyPotSSHSession.*?runCommand\] CMD: wget (?P<url>http[s]?://[^\s]+)"
+SESSION_START_PATTERN = re.compile(
+    r"\[HoneyPotSSHTransport,\d+,(?P<ip>\d+\.\d+\.\d+\.\d+)\] New connection: "
+) # Extra credit
+
+SESSION_CLOSE_PATTERN = re.compile(
+    r"Connection lost after (?P<duration>\d+)(?:\.\d+)? seconds"
 ) # Extra credit
 
 # ── Helper to print tables ──────────────────────────────────────────────────
@@ -154,21 +158,32 @@ def identify_bots(path: str, min_ips: int):
     for fp, ips in sorted(bots.items(), key=lambda x: len(x[1]), reverse=True):
         print(f"{fp:<47} {len(ips):>6}")
 
-# ── Extra credit (wget drops) already implemented ───────────────────────────
+# ── Extra credit: Analyze Session Times ────────────────────────────────────────────────
 
-def analyze_wget_drops(path: str):
-    """List URLs downloaded via 'wget' by bots."""
-    url_counter = Counter()
+def analyze_session_times(path: str):
+    """Show min/avg/max SSH session durations."""
+    durations = []
 
     with open(path, encoding="utf-8") as fp:
         for line in fp:
-            match = WGET_PATTERN.search(line)
-            if match:
-                url = match.group("url")
-                url_counter[url] += 1
+            # Look for session close line
+            close_match = SESSION_CLOSE_PATTERN.search(line)
+            if close_match:
+                duration = float(close_match.group("duration"))
+                durations.append(duration)
 
-    print("Common wget downloads by bots")
-    _print_counter(url_counter, "URL", "Count")
+    if not durations:
+        print("No session durations found.")
+        return
+
+    min_time = min(durations)
+    avg_time = sum(durations) / len(durations)
+    max_time = max(durations)
+
+    print("Session Duration Statistics")
+    print(f"{'Min':>8}: {min_time:.2f} sec")
+    print(f"{'Avg':>8}: {avg_time:.2f} sec")
+    print(f"{'Max':>8}: {max_time:.2f} sec")
 
 # ── CLI ─────────────────────────────────────────────────────────────────────
 
@@ -178,7 +193,7 @@ def main():
     parser.add_argument("--task",
                         required=True,
                         choices=["failed-logins", "connections",
-                                 "successful-creds", "identify-bots", "wget-drops"],
+                                 "successful-creds", "identify-bots", "session-times"],
                         help="Which analysis to run")
     parser.add_argument("--min-count", type=int, default=1,
                         help="Min events to report (failed-logins)")
@@ -194,8 +209,8 @@ def main():
         analyze_successful_creds(args.logfile)
     elif args.task == "identify-bots":
         identify_bots(args.logfile, args.min_ips)
-    elif args.task == "wget-drops":  # 🎣 Extra credit
-        analyze_wget_drops(args.logfile)
+    elif args.task == "session-times": # Extra credit
+        analyze_session_times(args.logfile)
 
 
 if __name__ == "__main__":
