@@ -68,7 +68,20 @@ def analyze_failed_logins(path: str, min_count: int):
     5. Print the results using ``_print_counter``.
     """
     # TODO: replace the placeholder implementation below
-    print("[TODO] analyze_failed_logins not yet implemented — write your code here!\n")
+    ip_counter = Counter()
+
+    with open(path, encoding="utf-8") as fp:
+        for line in fp:
+            match = FAILED_LOGIN_PATTERN.search(line)
+            if match:
+                ip = match.group("ip")
+                ip_counter[ip] += 1
+
+    # Filter IPs below threshold
+    filtered = {ip: count for ip, count in ip_counter.items() if count >= min_count}
+
+    print(f"Failed logins from ≥ {min_count} attempts")
+    _print_counter(Counter(filtered), "IP Address", "Failures")
 
 # ── Task 2 (already done) ───────────────────────────────────────────────────
 
@@ -95,7 +108,31 @@ def analyze_successful_creds(path: str):
       three‑column table (Username, Password, IP_Count).
     """
     # TODO: replace the placeholder implementation below
-    print("[TODO] analyze_successful_creds not yet implemented — write your code here!\n")
+    cred_map = defaultdict(set)
+
+    with open(path, encoding="utf-8") as fp:
+        for line in fp:
+            match = SUCCESS_LOGIN_PATTERN.search(line)
+            if match:
+                user = match.group("user")
+                pw = match.group("pw")
+                ip = match.group("ip")
+                cred_map[(user, pw)].add(ip)
+
+    # Convert to list of ((user, pw), ip_count) and sort by count descending
+    sorted_pairs = sorted(
+        [(creds, len(ips)) for creds, ips in cred_map.items()],
+        key=lambda x: x[1],
+        reverse=True
+    )
+
+    print("Successful credential pairs")
+    width_user = max(len(u) for (u, _) in cred_map) if cred_map else len("Username")
+    width_pw = max(len(p) for (_, p) in cred_map) if cred_map else len("Password")
+    print(f"{'Username':<{width_user}} {'Password':<{width_pw}} {'Count':>6}")
+    print("-" * (width_user + width_pw + 8))
+    for (user, pw), count in sorted_pairs:
+        print(f"{user:<{width_user}} {pw:<{width_pw}} {count:>6}")
 
 # ── Task 4 (bot fingerprints) already implemented ───────────────────────────
 
