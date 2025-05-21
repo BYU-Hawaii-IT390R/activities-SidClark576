@@ -157,6 +157,7 @@ def identify_bots(path: str, min_ips: int):
 # ── Extra credit (wget drops) already implemented ───────────────────────────
 
 def analyze_wget_drops(path: str):
+    """List URLs downloaded via 'wget' by bots."""
     url_counter = Counter()
 
     with open(path, encoding="utf-8") as fp:
@@ -177,7 +178,7 @@ def main():
     parser.add_argument("--task",
                         required=True,
                         choices=["failed-logins", "connections",
-                                 "successful-creds", "identify-bots"],
+                                 "successful-creds", "identify-bots", "wget-drops"],
                         help="Which analysis to run")
     parser.add_argument("--min-count", type=int, default=1,
                         help="Min events to report (failed-logins)")
