@@ -1,0 +1,57 @@
+## Here is the output of the code
+
+# python3 analyze_log.py cowrie-tiny.log --task failed-logins --min-count 1
+
+Failed logins from ≥ 1 attempts
+IP Address      Failures
+------------------------
+197.5.145.69          28
+2.82.170.124          25
+106.13.236.133        24
+159.89.130.245        18
+167.71.234.157        17
+139.186.77.46         17
+104.42.113.137        15
+121.102.93.198        15
+122.51.81.247         14
+190.52.191.49         14
+139.59.39.185         13
+210.178.121.46        11
+146.0.209.73          11
+167.71.141.205         1
+207.154.196.106        1
+185.191.124.143        1
+162.247.74.200         1
+185.247.224.14         1
+185.100.87.202         1
+175.125.94.166         1
+
+# python3 analyze_log.py cowrie-tiny.log --task successful-creds
+
+Successful credential pairs
+Username  Password     Count
+----------------------------
+b'root'   b'admin'         8
+b'root'   b'password'      1
+b'oracle' b'oracle'        1
+
+
+## Extra Credit Task: `--session-times`
+
+Implemented the `--session-times` flag to analyze SSH session durations from the Cowrie honeypot log.
+
+This task extracts how long each SSH session lasted and reports:
+
+- Minimum session duration  
+- Average session duration  
+- Maximum session duration  
+
+### 🔧 Purpose
+
+This helps understand attacker behavior — for example, whether bots are staying connected briefly (indicating automated attacks) or maintaining longer sessions (possibly manual probing).
+
+### ✅ Usage
+
+Run it like this:
+
+python analyze_log.py cowrie.log --task session-times
