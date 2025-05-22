@@ -2,6 +2,7 @@
 
 # python3 analyze_log.py cowrie-tiny.log --task failed-logins --min-count 1
 
+Output:
 Failed logins from ≥ 1 attempts
 IP Address      Failures
 ------------------------
@@ -28,6 +29,7 @@ IP Address      Failures
 
 # python3 analyze_log.py cowrie-tiny.log --task successful-creds
 
+Output:
 Successful credential pairs
 Username  Password     Count
 ----------------------------
@@ -54,4 +56,10 @@ This helps understand attacker behavior — for example, whether bots are stayin
 
 Run it like this:
 
-python analyze_log.py cowrie.log --task session-times
+python3 analyze_log.py cowrie-tiny.log --task session-times
+
+Output:
+Session Duration Statistics
+     Min: 0.00 sec
+     Avg: 29.79 sec
+     Max: 182.00 sec
