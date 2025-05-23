@@ -19,6 +19,8 @@ python analyze_windows.py --task win-pkgs --csv pkgs.csv
 
 # Ensure Spooler & Windows Update are running (start them if stopped)
 python analyze_windows.py --task win-services --watch Spooler wuauserv --fix
+
+
 ```
 """
 
@@ -213,30 +215,33 @@ def task_scheduled_tasks():
         print(f"[-] Error accessing Task Scheduler: {str(e)}")
 
 # ══════════════════════════════════════════════════════════════════════════
-# Task 5: VSS Shadow Storage Usage Check (win-vss)
+# Task 5: List Startup Items (win-startup)
 # ══════════════════════════════════════════════════════════════════════════
 
-def task_vss_check():
-    """Check VSS shadow storage usage and warn if over 10%."""
-    import wmi
-    print("\n[+] VSS Shadow Storage Usage\n" + "-" * 50)
+def task_startup_items():
+    """List startup items from registry."""
+    print("\n[+] Startup Items\n" + "-" * 40)
+    startup_keys = [
+        (winreg.HKEY_CURRENT_USER, r"Software\Microsoft\Windows\CurrentVersion\Run"),
+        (winreg.HKEY_LOCAL_MACHINE, r"Software\Microsoft\Windows\CurrentVersion\Run")
+    ]
+    table_header = "{:<25} {:<30}".format("Key", "Command")
+    print(table_header)
+    print("-" * len(table_header))
 
-    try:
-        c = wmi.WMI()
-        shadow_storage_list = c.query("SELECT * FROM Win32_ShadowStorage")
-
-        print("{:<10} {:<15} {:<15} {:<10}".format("Volume", "Used (MB)", "Max (MB)", "Util %"))
-        print("-" * 50)
-
-        for ss in shadow_storage_list:
-            vol = ss.Volume
-            used_mb = round(ss.UsedSpace / (1024 ** 2), 2)
-            max_mb = round(ss.MaxSpace / (1024 ** 2), 2)
-            util_pct = round((used_mb / max_mb) * 100, 2) if max_mb > 0 else 0
-            warning = "⚠️" if util_pct > 10 else ""
-            print("{:<10} {:<15} {:<15} {:<10} {}".format(vol, used_mb, max_mb, util_pct, warning))
-    except Exception as e:
-        print(f"[-] Error querying VSS info: {str(e)}")
+    for hive, path in startup_keys:
+        try:
+            key = winreg.OpenKey(hive, path)
+            i = 0
+            while True:
+                try:
+                    name, value, _ = winreg.EnumValue(key, i)
+                    print(f"{name:<25} {value}")
+                    i += 1
+                except OSError:
+                    break
+        except FileNotFoundError:
+            continue
 
 # ══════════════════════════════════════════════════════════════════════════
 # CLI
@@ -245,7 +250,7 @@ def task_vss_check():
 def main():
     p = argparse.ArgumentParser(description="Windows admin toolkit (IT 390R)")
     p.add_argument("--task", required=True,
-                   choices=["win-events", "win-pkgs", "win-services", "win-tasks", "win-vss"],
+                   choices=["win-events", "win-pkgs", "win-services", "win-tasks", "win-startup"],
                    help="Which analysis to run")
 
     # win-events options
@@ -272,10 +277,10 @@ def main():
         win_pkgs(args.csv)
     elif args.task == "win-services":
         win_services(args.watch, args.fix)
-    elif args.task == "win-tasks":
+    elif args.task == "win-tasks": # Extra task
         task_scheduled_tasks()
-    elif args.task == "win-vss":
-        task_vss_check()
+    elif args.task == "win-startup": # Extra task
+        task_startup_items()
 
 if __name__ == "__main__":
     main()
