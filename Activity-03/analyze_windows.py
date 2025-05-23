@@ -225,7 +225,7 @@ def task_startup_items():
         (winreg.HKEY_CURRENT_USER, r"Software\Microsoft\Windows\CurrentVersion\Run"),
         (winreg.HKEY_LOCAL_MACHINE, r"Software\Microsoft\Windows\CurrentVersion\Run")
     ]
-    table_header = "{:<25} {:<30}".format("Key", "Location")
+    table_header = "{:<25} {:<30}".format("Key", "Commands")
     print(table_header)
     print("-" * len(table_header))
 
