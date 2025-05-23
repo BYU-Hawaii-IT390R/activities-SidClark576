@@ -1,0 +1,21 @@
+"""Existing tasks on the code"""
+
+# Show IPs with ≥ 3 failed logons in last 12h
+python analyze_windows.py --task win-events --hours 12 --min-count 3
+
+# Export installed software to CSV
+python analyze_windows.py --task win-pkgs --csv pkgs.csv
+
+# Ensure Spooler & Windows Update are running
+python analyze_windows.py --task win-services --watch Spooler wuauserv --fix
+
+"""Added tasks to the code""" 
+
+# List non-Microsoft scheduled tasks
+python analyze_windows.py --task win-tasks
+
+# Show startup items configured in registry
+python analyze_windows.py --task win-startup
+- Displays programs set to run at boot/login from common registry keys:
+    HKCU\Software\Microsoft\Windows\CurrentVersion\Run
+    HKLM\Software\Microsoft\Windows\CurrentVersion\Run
