@@ -186,13 +186,66 @@ def win_services(watch: list[str], auto_fix: bool):
     print()
 
 # ══════════════════════════════════════════════════════════════════════════
+# Task 4: List Scheduled Tasks (win-tasks)
+# ══════════════════════════════════════════════════════════════════════════
+
+def task_scheduled_tasks():
+    """List all non-Microsoft scheduled tasks with next run time."""
+    import win32com.client
+    print("\n[+] Scheduled Tasks (Non-Microsoft)\n" + "-" * 60)
+    
+    try:
+        scheduler = win32com.client.Dispatch('Schedule.Service')
+        scheduler.Connect()
+        folder = scheduler.GetFolder('\\')
+        tasks = folder.GetTasks(0)
+
+        print("{:<40} {:<30} {:<20}".format("Task Name", "Next Run Time", "Author"))
+        print("-" * 90)
+
+        for task in tasks:
+            name = task.Name
+            author = task.Definition.RegistrationInfo.Author
+            if 'microsoft' not in author.lower():
+                next_run = task.NextRunTime
+                print("{:<40} {:<30} {:<20}".format(name, str(next_run), author))
+    except Exception as e:
+        print(f"[-] Error accessing Task Scheduler: {str(e)}")
+
+# ══════════════════════════════════════════════════════════════════════════
+# Task 5: VSS Shadow Storage Usage Check (win-vss)
+# ══════════════════════════════════════════════════════════════════════════
+
+def task_vss_check():
+    """Check VSS shadow storage usage and warn if over 10%."""
+    import wmi
+    print("\n[+] VSS Shadow Storage Usage\n" + "-" * 50)
+
+    try:
+        c = wmi.WMI()
+        shadow_storage_list = c.query("SELECT * FROM Win32_ShadowStorage")
+
+        print("{:<10} {:<15} {:<15} {:<10}".format("Volume", "Used (MB)", "Max (MB)", "Util %"))
+        print("-" * 50)
+
+        for ss in shadow_storage_list:
+            vol = ss.Volume
+            used_mb = round(ss.UsedSpace / (1024 ** 2), 2)
+            max_mb = round(ss.MaxSpace / (1024 ** 2), 2)
+            util_pct = round((used_mb / max_mb) * 100, 2) if max_mb > 0 else 0
+            warning = "⚠️" if util_pct > 10 else ""
+            print("{:<10} {:<15} {:<15} {:<10} {}".format(vol, used_mb, max_mb, util_pct, warning))
+    except Exception as e:
+        print(f"[-] Error querying VSS info: {str(e)}")
+
+# ══════════════════════════════════════════════════════════════════════════
 # CLI
 # ══════════════════════════════════════════════════════════════════════════
 
 def main():
     p = argparse.ArgumentParser(description="Windows admin toolkit (IT 390R)")
     p.add_argument("--task", required=True,
-                   choices=["win-events", "win-pkgs", "win-services"],
+                   choices=["win-events", "win-pkgs", "win-services", "win-tasks", "win-vss"],
                    help="Which analysis to run")
 
     # win-events options
@@ -219,6 +272,10 @@ def main():
         win_pkgs(args.csv)
     elif args.task == "win-services":
         win_services(args.watch, args.fix)
+    elif args.task == "win-tasks":
+        task_scheduled_tasks()
+    elif args.task == "win-vss":
+        task_vss_check()
 
 if __name__ == "__main__":
     main()
